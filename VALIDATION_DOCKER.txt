@@ -1,0 +1,6 @@
+24/09/2026
+9 tests Python réussis : configuration .env et workflow.
+Route HTTP /health testée localement.
+Configuration Compose vérifiée statiquement.
+Docker Engine indisponible : build et exécution du conteneur à effectuer sur le VPS.
+APK non modifié.

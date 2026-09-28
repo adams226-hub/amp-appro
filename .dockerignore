@@ -1,0 +1,6 @@
+**
+!Dockerfile
+!requirements.txt
+!server/
+!server/server.py
+# Liste blanche : pas de .env, bases, cles APK ni documents dans l image.
