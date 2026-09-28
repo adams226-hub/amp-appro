@@ -14,6 +14,8 @@ load_dotenv(PROJECT_DIR / '.env', override=False)
 DB = os.environ.get('AMP_DB', 'amp-appro.sqlite3')
 HOST = os.environ.get('AMP_HOST', '127.0.0.1')
 PORT = int(os.environ.get('AMP_PORT', '8080'))
+# Origines autorisées (CORS). L'APK utilise https://app.amp.local ; ajouter d'autres origines séparées par des virgules pour les tests navigateur.
+ORIGINS = {o.strip().rstrip('/') for o in os.environ.get('AMP_CORS_ORIGINS', 'https://app.amp.local').split(',') if o.strip()}
 if not DB.strip():
  raise ValueError('AMP_DB ne doit pas être vide.')
 if not 1 <= PORT <= 65535:
@@ -171,12 +173,15 @@ def dispatch(c,user,method,path,b):
 
 class Handler(BaseHTTPRequestHandler):
  def log_message(self,*args): pass
+ def cors(self):
+  origin=self.headers.get('Origin','')
+  self.send_header('Access-Control-Allow-Origin',origin if origin in ORIGINS else 'https://app.amp.local');self.send_header('Vary','Origin')
  def reply(self,status,obj):
   data=json.dumps(obj,ensure_ascii=False).encode();self.send_response(status)
   self.send_header('Content-Type','application/json; charset=utf-8');self.send_header('Content-Length',str(len(data)))
-  self.send_header('Access-Control-Allow-Origin','https://app.amp.local');self.send_header('Vary','Origin');self.send_header('Cache-Control','no-store');self.end_headers();self.wfile.write(data)
+  self.cors();self.send_header('Cache-Control','no-store');self.end_headers();self.wfile.write(data)
  def do_OPTIONS(self):
-  self.send_response(204);self.send_header('Access-Control-Allow-Origin','https://app.amp.local');self.send_header('Access-Control-Allow-Headers','Content-Type, Authorization, Idempotency-Key');self.send_header('Access-Control-Allow-Methods','GET, POST, OPTIONS');self.end_headers()
+  self.send_response(204);self.cors();self.send_header('Access-Control-Allow-Headers','Content-Type, Authorization, Idempotency-Key');self.send_header('Access-Control-Allow-Methods','GET, POST, OPTIONS');self.end_headers()
  def do_GET(self):self.handle_api('GET')
  def do_POST(self):self.handle_api('POST')
  def handle_api(self,method):
